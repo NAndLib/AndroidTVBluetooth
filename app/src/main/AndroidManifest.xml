@@ -8,6 +8,15 @@
 
     <!-- Android 12+ Permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Pairing (ACTION_PAIR) needs discovery. neverForLocation: scan results are not used for location. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <!-- Discovery on Android 11 and older is gated behind location instead of BLUETOOTH_SCAN. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
@@ -74,6 +83,7 @@
                 <action android:name="com.saihgupr.btcontrol.ACTION_CONNECT" />
                 <action android:name="com.saihgupr.btcontrol.ACTION_DISCONNECT" />
                 <action android:name="com.saihgupr.btcontrol.ACTION_ANC" />
+                <action android:name="com.saihgupr.btcontrol.ACTION_PAIR" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>

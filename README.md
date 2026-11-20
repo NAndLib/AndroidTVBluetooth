@@ -107,6 +107,29 @@ adb shell am broadcast -a com.saihgupr.btcontrol.ACTION_DISCONNECT \
   -e name "Your Device Name"
 ```
 
+### Pair a New Device
+
+Put the device in pairing mode, then scan for it and pair. The result prints straight
+to your terminal:
+```bash
+adb shell am broadcast -a com.saihgupr.btcontrol.ACTION_PAIR \
+  -n com.saihgupr.btcontrol/.BluetoothControlReceiver \
+  -e name "WH-1000XM4"
+# Broadcast completed: result=1, data="Paired: WH-1000XM4 [CC:98:8B:F4:97:BA], connect requested"
+```
+- `-e address "AA:BB:CC:DD:EE:FF"` matches by MAC address instead of name.
+- `--ei timeout 45` sets how long to scan, in seconds (5–50, default 30).
+- `--ez connect false` pairs without connecting afterwards.
+- `result=1` means paired, `result=2` means failed. If the device isn't found, the
+  message lists every device the scan saw, so you can copy the exact name or address.
+- Name matching is exact (case-insensitive) and skips the Bluetooth LE-only twin that
+  Sony headsets advertise under the same name.
+- If the TV shows a pairing confirmation, accept it with
+  `adb shell input keyevent KEYCODE_DPAD_CENTER`.
+
+Pairing needs one extra permission (see [Grant Permissions](#2-grant-permissions)).
+Like the other broadcasts, `ACTION_PAIR` only accepts commands from `adb shell`, not from other apps.
+
 
 ## Installation
 
@@ -127,7 +150,12 @@ adb install -r path/to/AndroidTVBluetooth.apk
 **Option A: Via ADB**
 ```bash
 adb shell pm grant com.saihgupr.btcontrol android.permission.BLUETOOTH_CONNECT
+
+# Only needed for pairing new devices (ACTION_PAIR):
+adb shell pm grant com.saihgupr.btcontrol android.permission.BLUETOOTH_SCAN          # Android 12+
+adb shell pm grant com.saihgupr.btcontrol android.permission.ACCESS_FINE_LOCATION    # Android 11 and older
 ```
+On Android 11 and older, scanning also needs the system **Location** setting turned on.
 
 **Option B: Manual (On TV)**
 1. Go to your TV's **Settings > Apps > See all apps**.

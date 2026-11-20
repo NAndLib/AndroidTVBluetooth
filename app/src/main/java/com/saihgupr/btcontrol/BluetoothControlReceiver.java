@@ -22,9 +22,20 @@ public class BluetoothControlReceiver extends BroadcastReceiver {
     private static final String ACTION_CONNECT = "com.saihgupr.btcontrol.ACTION_CONNECT";
     private static final String ACTION_DISCONNECT = "com.saihgupr.btcontrol.ACTION_DISCONNECT";
     private static final String ACTION_ANC = "com.saihgupr.btcontrol.ACTION_ANC";
+    private static final String ACTION_PAIR = "com.saihgupr.btcontrol.ACTION_PAIR";
     private static final String EXTRA_ADDRESS = "address";
     private static final String EXTRA_NAME = "name";
     private static final String EXTRA_MODE = "mode";
+    private static final String EXTRA_TIMEOUT = "timeout";
+    private static final String EXTRA_CONNECT = "connect";
+
+    // Result codes printed by `adb shell am broadcast` ("Broadcast completed: result=N, data=...").
+    private static final int RESULT_PAIRED = 1;
+    private static final int RESULT_FAILED = 2;
+    private static final int PAIR_TIMEOUT_DEFAULT_S = 30;
+    private static final int PAIR_TIMEOUT_MIN_S = 5;
+    // Background broadcasts are ANR'd after 60 s, and goAsync() holds the broadcast open.
+    private static final int PAIR_TIMEOUT_MAX_S = 50;
     
     // We keep a static instance to keep the helper/proxies alive if possible,
     // though Manifest receivers have short lifecycles.
@@ -55,6 +66,11 @@ public class BluetoothControlReceiver extends BroadcastReceiver {
 
         if (ACTION_ANC.equals(action)) {
             handleAnc(context.getApplicationContext(), intent, pendingResult);
+            return;
+        }
+
+        if (ACTION_PAIR.equals(action)) {
+            handlePair(context.getApplicationContext(), intent, pendingResult);
             return;
         }
 
@@ -147,6 +163,38 @@ public class BluetoothControlReceiver extends BroadcastReceiver {
                 pendingResult.finish();
             }
         }, "anc-broadcast").start();
+    }
+
+    private void handlePair(Context context, Intent intent, PendingResult pendingResult) {
+        PairTarget target = PairTarget.parse(
+                intent.getStringExtra(EXTRA_ADDRESS), intent.getStringExtra(EXTRA_NAME));
+        if (target == null) {
+            String message = "Pass a valid --es address AA:BB:CC:DD:EE:FF or --es name \"Device Name\"";
+            Log.e(TAG, "PAIR: " + message);
+            pendingResult.setResult(RESULT_FAILED, message, null);
+            pendingResult.finish();
+            return;
+        }
+
+        int timeoutS = Math.max(PAIR_TIMEOUT_MIN_S, Math.min(PAIR_TIMEOUT_MAX_S,
+                intent.getIntExtra(EXTRA_TIMEOUT, PAIR_TIMEOUT_DEFAULT_S)));
+        boolean connectAfter = intent.getBooleanExtra(EXTRA_CONNECT, true);
+
+        new BluetoothPairer(context, target, timeoutS * 1000L, (ok, message, address) -> {
+            if (!ok || !connectAfter) {
+                pendingResult.setResult(ok ? RESULT_PAIRED : RESULT_FAILED, message, null);
+                pendingResult.finish();
+                return;
+            }
+            if (sHelper == null) {
+                sHelper = new BluetoothManagerHelper(context);
+            }
+            sHelper.connect(address, () -> {
+                DevicePrefs.applyStartupVolume(context);
+                pendingResult.setResult(RESULT_PAIRED, message + ", connect requested", null);
+                pendingResult.finish();
+            });
+        }).start();
     }
 
     private SonySession.Mode parseAncMode(String mode) {

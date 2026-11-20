@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`ACTION_PAIR` broadcast** to pair a new device from ADB by `name` or `address`.
+  Scans, pairs, then connects (turn this off with `--ez connect false`). The result prints
+  in the `am broadcast` output and lists nearby devices when the target isn't found.
+
+### Notes
+
+- Needs `BLUETOOTH_SCAN` on Android 12+, or `ACCESS_FINE_LOCATION` on Android 11 and older
+  (declared only for those versions). Restricted to `adb shell`, like the other broadcasts.
+
 ## 1.3.1
 
 ### Added
