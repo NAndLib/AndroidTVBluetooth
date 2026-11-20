@@ -109,8 +109,11 @@ adb shell am broadcast -a com.saihgupr.btcontrol.ACTION_DISCONNECT \
 
 ### Pair a New Device
 
-Put the device in pairing mode, then scan for it and pair. The result prints straight
-to your terminal:
+**In the app:** select **+ Pair New Device** next to *Paired Devices*, put the device in
+pairing mode, and pick it from the list as it appears. It pairs, then connects.
+
+**Over ADB:** put the device in pairing mode, then scan for it and pair. The result prints
+straight to your terminal:
 ```bash
 adb shell am broadcast -a com.saihgupr.btcontrol.ACTION_PAIR \
   -n com.saihgupr.btcontrol/.BluetoothControlReceiver \
@@ -151,11 +154,19 @@ adb install -r path/to/AndroidTVBluetooth.apk
 ```bash
 adb shell pm grant com.saihgupr.btcontrol android.permission.BLUETOOTH_CONNECT
 
-# Only needed for pairing new devices (ACTION_PAIR):
-adb shell pm grant com.saihgupr.btcontrol android.permission.BLUETOOTH_SCAN          # Android 12+
-adb shell pm grant com.saihgupr.btcontrol android.permission.ACCESS_FINE_LOCATION    # Android 11 and older
+# Only needed for pairing new devices.
+# Android 12+:
+adb shell pm grant com.saihgupr.btcontrol android.permission.BLUETOOTH_SCAN
+# Android 11 and older (BLUETOOTH_CONNECT/SCAN don't exist there; skip those grants):
+adb shell pm grant com.saihgupr.btcontrol android.permission.ACCESS_FINE_LOCATION
+adb shell pm grant com.saihgupr.btcontrol android.permission.ACCESS_BACKGROUND_LOCATION  # ACTION_PAIR only
+adb shell settings put secure location_mode 3   # turn system Location on
 ```
-On Android 11 and older, scanning also needs the system **Location** setting turned on.
+On Android 11 and older, Android treats Bluetooth scanning as location access: it hides
+every scan result while system **Location** is off, and the adb `ACTION_PAIR` broadcast
+(which runs in the background) also needs background location. The in-app
+**+ Pair New Device** button asks for what it needs itself. The app has no internet
+permission and never reads your location.
 
 **Option B: Manual (On TV)**
 1. Go to your TV's **Settings > Apps > See all apps**.

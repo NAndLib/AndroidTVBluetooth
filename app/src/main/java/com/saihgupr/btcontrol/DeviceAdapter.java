@@ -132,6 +132,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         // Make the entire card clickable for better TV navigation
         holder.itemView.setFocusable(true);
         holder.itemView.setClickable(true);
+        // The RecyclerView's own focus search skips the header's Pair button, so link it.
+        // Reset for recycled holders, which may have been row 0 before.
+        holder.itemView.setNextFocusUpId(position == 0 ? R.id.pair_button : View.NO_ID);
         holder.itemView.setOnClickListener(v -> {
             if (isConnected) {
                 android.util.Log.d(TAG, "Card clicked (Disconnect): " + device.getName());

@@ -4,14 +4,20 @@
 
 ### Added
 
+- **+ Pair New Device button** next to *Paired Devices*. Opens a live list of nearby named
+  devices; pick one to pair and connect. Asks for the scan permission (or Location on
+  Android 10/11) itself.
 - **`ACTION_PAIR` broadcast** to pair a new device from ADB by `name` or `address`.
   Scans, pairs, then connects (turn this off with `--ez connect false`). The result prints
   in the `am broadcast` output and lists nearby devices when the target isn't found.
 
 ### Notes
 
-- Needs `BLUETOOTH_SCAN` on Android 12+, or `ACCESS_FINE_LOCATION` on Android 11 and older
-  (declared only for those versions). Restricted to `adb shell`, like the other broadcasts.
+- Needs `BLUETOOTH_SCAN` on Android 12+. On Android 11 and older it needs
+  `ACCESS_FINE_LOCATION`, system Location turned on, and for `ACTION_PAIR`
+  `ACCESS_BACKGROUND_LOCATION` (location permissions declared only for those versions).
+  `ACTION_PAIR` is restricted to `adb shell`, like the other broadcasts.
+- The paired device list now refreshes when a device is paired or unpaired.
 
 ## 1.3.1
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Solid fill when focused so the D-pad selection is obvious on a TV. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/colorPrimary" android:state_focused="true" />
+    <item android:color="@color/colorPrimary" android:state_pressed="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

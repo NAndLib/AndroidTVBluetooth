@@ -64,6 +64,24 @@
     <string name="noise_control_permission">Grant BLUETOOTH_CONNECT to control noise mode</string>
     <string name="noise_control_timeout">No response from headphones</string>
 
+    <!-- Pair New Device -->
+    <string name="pair_button">+ Pair New Device</string>
+    <string name="pair_title">Pair New Device</string>
+    <string name="pair_rescan">Scan Again</string>
+    <string name="pair_scanning">Searching… put your device in pairing mode</string>
+    <string name="pair_scan_done">Scan finished. Select a device to pair.</string>
+    <string name="pair_scan_empty">No devices found. Put it in pairing mode and scan again.</string>
+    <string name="pair_scan_empty_unnamed">No named devices found (%1$d without a name). Put it in pairing mode and scan again.</string>
+    <string name="pair_scan_failed">Could not start the Bluetooth scan</string>
+    <string name="pair_pairing">Pairing with %1$s… accept any prompt on the device</string>
+    <string name="pair_success">Paired with %1$s</string>
+    <string name="pair_permission_denied">Bluetooth scan permission is needed to find new devices</string>
+    <string name="pair_location_title">Turn on Location</string>
+    <string name="pair_location_message">This Android version only shows nearby Bluetooth devices while Location is on. The app does not use your location.</string>
+    <string name="pair_location_open">Open Settings</string>
+    <string name="pair_location_unavailable">No Location setting on this TV. Run: adb shell settings put secure location_mode 3</string>
+    <string name="cancel">Cancel</string>
+
     <!-- Mobile Quick Settings & Widget -->
     <string name="tile_label">BT Quick Connect</string>
     <string name="widget_name">Bluetooth Controller</string>

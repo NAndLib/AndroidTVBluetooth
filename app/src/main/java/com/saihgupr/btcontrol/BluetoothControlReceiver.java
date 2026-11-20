@@ -35,7 +35,8 @@ public class BluetoothControlReceiver extends BroadcastReceiver {
     private static final int PAIR_TIMEOUT_DEFAULT_S = 30;
     private static final int PAIR_TIMEOUT_MIN_S = 5;
     // Background broadcasts are ANR'd after 60 s, and goAsync() holds the broadcast open.
-    private static final int PAIR_TIMEOUT_MAX_S = 50;
+    // Headroom covers a bond that starts near the deadline (min 5 s) plus the ~2 s connect.
+    private static final int PAIR_TIMEOUT_MAX_S = 45;
     
     // We keep a static instance to keep the helper/proxies alive if possible,
     // though Manifest receivers have short lifecycles.

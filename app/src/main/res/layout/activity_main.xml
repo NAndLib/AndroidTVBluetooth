@@ -352,6 +352,7 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="12dp"
                 android:gravity="center_vertical"
+                android:nextFocusDown="@id/pair_button"
                 android:focusable="true"
                 android:clickable="true">
 
@@ -409,6 +410,28 @@
         android:letterSpacing="0.1"
         app:layout_constraintTop_toBottomOf="@id/controls_card"
         app:layout_constraintStart_toEndOf="@id/guideline_vertical" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/pair_button"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginEnd="16dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minHeight="0dp"
+        android:paddingHorizontal="16dp"
+        android:text="@string/pair_button"
+        android:textAllCaps="false"
+        android:textColor="@color/pair_button_text"
+        android:textSize="13sp"
+        android:nextFocusUp="@id/mute_card"
+        app:backgroundTint="@color/pair_button_bg"
+        app:cornerRadius="18dp"
+        app:strokeColor="@color/colorPrimary"
+        app:layout_constraintTop_toTopOf="@id/devices_header"
+        app:layout_constraintBottom_toBottomOf="@id/devices_header"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/devices_recycler"

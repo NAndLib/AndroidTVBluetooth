@@ -22,6 +22,21 @@
         <item name="textAppearanceBody1">@style/TextAppearance.MaterialComponents.Body1</item>
     </style>
 
+    <!-- Dark dialog matching the cards, regardless of the TV's day/night setting -->
+    <style name="ThemeOverlay.AndroidTVBluetooth.Dialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnSurface</item>
+        <item name="android:textColorPrimary">@color/colorOnSurface</item>
+        <item name="android:textColorSecondary">@color/text_muted</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.AndroidTVBluetooth.Dialog</item>
+    </style>
+
+    <style name="ShapeAppearance.AndroidTVBluetooth.Dialog" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
     <!-- Translucent QuickConnect Theme for instant background execution -->
     <style name="Theme.AndroidTVBluetooth.QuickConnect" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>

@@ -1,6 +1,8 @@
 package com.saihgupr.btcontrol;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
+import android.provider.Settings;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
@@ -25,10 +27,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.saihgupr.btcontrol.sony.SonyController;
 import com.saihgupr.btcontrol.sony.SonySession;
 import java.util.ArrayList;
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothManagerH
     private static final String TAG = "MainActivity";
     public static final String EXTRA_AUTO_CONNECT = "autoconnect";
     public static final String ACTION_BATTERY_LEVEL_CHANGED = "android.bluetooth.device.action.BATTERY_LEVEL_CHANGED";
+    private static final int REQUEST_PAIR_PERMISSIONS = 42;
 
     private ImageView statusIcon;
     private TextView statusTitle;
@@ -62,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothManagerH
     private DeviceAdapter deviceAdapter;
     private BluetoothManagerHelper btHelper;
     private boolean hasAutoConnectedThisSession = false;
+    private PairDeviceDialog pairDialog;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -73,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothManagerH
             }
             if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action) ||
                 BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action) ||
+                BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action) ||
                 BluetoothAdapter.ACTION_STATE_CHANGED.equals(action) ||
                 ACTION_BATTERY_LEVEL_CHANGED.equals(action)) {
                 updateDeviceList();
@@ -105,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothManagerH
         muteSubtitle = findViewById(R.id.mute_subtitle);
         muteSwitch = findViewById(R.id.mute_switch);
         devicesRecycler = findViewById(R.id.devices_recycler);
+        findViewById(R.id.pair_button).setOnClickListener(v -> startPairing());
 
         btHelper = new BluetoothManagerHelper(this);
         deviceAdapter = new DeviceAdapter(btHelper, new DeviceAdapter.OnDeviceActionListener() {
@@ -129,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements BluetoothManagerH
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         filter.addAction(ACTION_BATTERY_LEVEL_CHANGED);
         registerReceiver(mReceiver, filter);
@@ -257,6 +266,64 @@ public class MainActivity extends AppCompatActivity implements BluetoothManagerH
                     new Intent(this, MuteWatcherService.class));
         } catch (Exception e) {
             Log.w(TAG, "could not start mute watcher", e);
+        }
+    }
+
+    /** Checks Bluetooth, runtime permissions and (on Android 11-) Location, then opens the dialog. */
+    private void startPairing() {
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if (adapter == null || !adapter.isEnabled()) {
+            Toast.makeText(this, R.string.status_bt_off, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] missing = BluetoothDiscovery.missingPermissions(this, false);
+        if (missing.length > 0) {
+            ActivityCompat.requestPermissions(this, missing, REQUEST_PAIR_PERMISSIONS);
+            return;
+        }
+        if (BluetoothDiscovery.isBlockedByLocationOff(this)) {
+            showLocationOffDialog();
+            return;
+        }
+        if (pairDialog != null && pairDialog.isShowing()) return;
+
+        pairDialog = new PairDeviceDialog(this, device -> {
+            updateDeviceList();
+            btHelper.connect(device.getAddress(),
+                    () -> DevicePrefs.applyStartupVolume(getApplicationContext()));
+        });
+        pairDialog.show();
+    }
+
+    private void showLocationOffDialog() {
+        new MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_AndroidTVBluetooth_Dialog)
+                .setTitle(R.string.pair_location_title)
+                .setMessage(R.string.pair_location_message)
+                .setPositiveButton(R.string.pair_location_open, (d, w) -> {
+                    try {
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    } catch (ActivityNotFoundException e) {
+                        Toast.makeText(this, R.string.pair_location_unavailable, Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != REQUEST_PAIR_PERMISSIONS) return;
+
+        boolean allGranted = grantResults.length > 0;
+        for (int result : grantResults) {
+            allGranted &= result == PackageManager.PERMISSION_GRANTED;
+        }
+        if (allGranted) {
+            startPairing();
+        } else {
+            Toast.makeText(this, R.string.pair_permission_denied, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -638,6 +705,9 @@ public class MainActivity extends AppCompatActivity implements BluetoothManagerH
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (pairDialog != null) {
+            pairDialog.dismiss();
+        }
         if (btHelper != null) {
             btHelper.removeProfileProxyListener(this);
         }
